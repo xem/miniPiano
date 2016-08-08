@@ -69,7 +69,7 @@ table {
 td {
   min-width: 30px;
   width: calc(100vw / 25);
-  height: calc(100vh / 25 - (50px / 25));
+  height: calc(90vh / 25 - (50px / 25));
   background-color: rgba(255,255,255,.1);
   border: 3px solid black;
   border-radius: 5px;
@@ -109,9 +109,8 @@ draw = () => {
   var h = "";
   for(x = 64; x >= 40; x--){
     h+="<tr>";
-    d[x] = [];
     for(y = 0; y < 200; y++){
-      d[x][y] = 0;
+      d[y] = [];
       h+="<td data-x="+x+" data-y="+y+">";
     }
   }
@@ -120,31 +119,52 @@ draw = () => {
 draw()
 
 playBack = () => {
+
+
+  /* magic formula:
+  
+  Math.round(
+  [41412,1245,9053,5252,(...notes...)].reduce(
+    (p, v, i ) => p + (v >> (t / 8912 * bpm / 60 & 31) & 1
+          ? 16 * Math.sin(440 * Math.pow(1.059463, i) * t / 8192 * Math.PI * 2)
+          : 0)
+    , 127));
+  
+  */
+  
+
   music = "";
   duration = 0;
+  binaries = [];
   for(y = 0; y < 200; y ++){
-    notes = 0;
+    binary = [];
     for(x = 40; x <= 64; x++){
-      if(d[x][y]) notes++;
+      binary[x - 40] = +d[y][x] || 0;
     }
-    if(notes){
-      music += "(t>" + y*1024 + "&&t<"+(y + 1)*1024+")?127+~~(";
-      for(x = 40; x <= 64; x++){
-        if(d[x][y]) music += "+(127*Math.sin(" + (Math.pow(1.059463,x)*440) + "*t/8192*Math.PI*2))";
-      }
-      music += ")/"+notes+":\n";
-      duration ++;
-    }
+    duration ++;
+    binary = binary.join("");
+    binary = parseInt(binary, 2);
+    binaries.push(binary);
   }
-  music += "127";
+  
+  for(i = binaries.length; i--;){
+    if(!binaries[i]){
+      delete binaries[i];
+      binaries.length--;
+    }
+    else break;
+  }
+  
+  music = "Math.round([" + binaries.join(",") + "].reduce((p,v,i)=>p+(v>>(t/8912*400/60&31)&1?16*Math.sin(440*Math.pow(1.059463,i)*t/8192*Math.PI*2):0),127))";
+  duration = binaries.length;
   console.log(music);
-  return music
+  return music;
 }
 
 play = () => {
   playB.disabled = true
 
-  s=function(f){for(var t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<1024*duration;)S+=String.fromCharCode(eval(f));return S};
+  s=function(f){for(var t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<(8192*60/400)*duration;)S+=String.fromCharCode(eval(f));return S};
   new Audio('data:audio/wav;base64,'+btoa(s(playBack()))).play();
 
   setTimeout(function(){playB.disabled = false},2000)
@@ -164,12 +184,12 @@ document.addEventListener('mousedown',function(e){
     var targetX = e.target.getAttribute('data-x'),
         targetY = e.target.getAttribute('data-y')
 
-    if (d[targetX][targetY]){
+    if (d[targetY][targetX]){
       flip = true
-      d[targetX][targetY] = false
+      d[targetY][targetX] = false
       e.target.className = ''
     } else {
-      d[targetX][targetY] = true
+      d[targetY][targetX] = true
       e.target.className = 'active'
     }
   }
@@ -181,10 +201,10 @@ document.addEventListener('mousemove',function(e){
 
   if (e.target.tagName === 'TD') {
     if (grab && (flip == false)){
-      d[targetX][targetY] = true
+      d[targetY][targetX] = true
       e.target.className = 'active'
     } else if (grab && flip) {
-      d[targetX][targetY] = false
+      d[targetY][targetX] = false
       e.target.className = ''
     }
   }
