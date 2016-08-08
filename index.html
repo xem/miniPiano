@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<title></title>
+<style>
+* {
+  box-sizing: border-box;
+}
+html {
+  font-family: sans-serif;
+  font-size: 10pt;
+  line-height: 1;
+  color: white;
+  background: black;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+body {
+  margin: 0;
+  padding-top: calc(12pt + 1em + 2em);
+}
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: calc(12pt + 1em + 2em);
+  width: 100%;
+  margin: 0;
+  padding: 1em;
+}
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: .5em;
+  color: white;
+  font-size: 12pt;
+  border: none;
+  border-radius: 3px;
+  background: rgba(255,255,255,.15);
+  transition: background .2s ease-in-out;
+  cursor: pointer;
+}
+button + button {
+  margin-left: .5em;
+}
+button:focus,
+button:hover {
+  background: rgba(255,255,255,.3)
+}
+#playB:focus,
+#playB:hover {
+  background: rgba(100,200,255,.7)
+}
+#resetB:focus,
+#resetB:hover {
+  background: rgba(255,200,100,.7)
+}
+#shareB:focus,
+#shareB:hover {
+  background: rgba(255,100,200,.7)
+}
+table {
+  border: none;
+  border-collapse: collapse;
+  width: 100vw;
+}
+td {
+  min-width: 30px;
+  width: calc(100vw / 25);
+  height: calc(100vh / 25 - (50px / 25));
+  background-color: rgba(255,255,255,.1);
+  border: 3px solid black;
+  border-radius: 5px;
+  transition: background-color .2s ease-in-out;
+  cursor: crosshair;
+}
+tr:nth-of-type(12n+3) td,
+tr:nth-of-type(12n+5) td,
+tr:nth-of-type(12n+7) td,
+tr:nth-of-type(12n+10) td,
+tr:nth-of-type(12n+12) td {
+  background-color: rgba(255,255,255,.05);
+}
+tr td:hover {
+  background-color: rgba(100,255,200,.7);
+}
+tr td.active {
+  background-color: rgba(255,255,255,.7);
+}
+[disabled] {
+  opacity: .2;
+}
+</style>
+
+<nav>
+  <button id=playB accesskey=p onclick=play()>Play</button>
+  <button id=resetB accesskey=r onclick="if(confirm('Are you sure you want to reset?'))draw()">Reset</button>
+  <button id=shareB accesskey=s onclick=share()>Share</button>
+</nav>
+
+<table id=t cellspacing=0 cellpadding=0>
+<script>
+d = [];
+song = '';
+
+draw = () => {
+  var h = "";
+  for(x = 64; x >= 40; x--){
+    h+="<tr>";
+    d[x] = [];
+    for(y = 0; y < 200; y++){
+      d[x][y] = 0;
+      h+="<td data-x="+x+" data-y="+y+">";
+    }
+  }
+  t.innerHTML = h;
+}
+draw()
+
+playBack = () => {
+  music = "";
+  duration = 0;
+  for(y = 0; y < 200; y ++){
+    notes = 0;
+    for(x = 40; x <= 64; x++){
+      if(d[x][y]) notes++;
+    }
+    if(notes){
+      music += "(t>" + y*1024 + "&&t<"+(y + 1)*1024+")?127+~~(";
+      for(x = 40; x <= 64; x++){
+        if(d[x][y]) music += "+(127*Math.sin(" + (Math.pow(1.059463,x)*440) + "*t/8192*Math.PI*2))";
+      }
+      music += ")/"+notes+":\n";
+      duration ++;
+    }
+  }
+  music += "127";
+  console.log(music);
+  return music
+}
+
+play = () => {
+  playB.disabled = true
+
+  s=function(f){for(var t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<1024*duration;)S+=String.fromCharCode(eval(f));return S};
+  new Audio('data:audio/wav;base64,'+btoa(s(playBack()))).play();
+
+  setTimeout(function(){playB.disabled = false},2000)
+}
+
+share = () => {
+  alert(playBack())
+}
+
+var grab = false,
+    flip = false
+
+document.addEventListener('mousedown',function(e){
+  if (e.target.tagName === 'TD') {
+    grab = true
+
+    var targetX = e.target.getAttribute('data-x'),
+        targetY = e.target.getAttribute('data-y')
+
+    if (d[targetX][targetY]){
+      flip = true
+      d[targetX][targetY] = false
+      e.target.className = ''
+    } else {
+      d[targetX][targetY] = true
+      e.target.className = 'active'
+    }
+  }
+})
+document.addEventListener('mousemove',function(e){
+
+  var targetX = e.target.getAttribute('data-x'),
+      targetY = e.target.getAttribute('data-y')
+
+  if (e.target.tagName === 'TD') {
+    if (grab && (flip == false)){
+      d[targetX][targetY] = true
+      e.target.className = 'active'
+    } else if (grab && flip) {
+      d[targetX][targetY] = false
+      e.target.className = ''
+    }
+  }
+})
+document.addEventListener('mouseup',function(e){
+  grab = flip = false
+})
+</script>
