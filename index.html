@@ -119,20 +119,6 @@ draw = () => {
 draw()
 
 playBack = () => {
-
-
-  /* magic formula:
-  
-  Math.round(
-  [41412,1245,9053,5252,(...notes...)].reduce(
-    (p, v, i ) => p + (v >> (t / 8912 * bpm / 60 & 31) & 1
-          ? 16 * Math.sin(440 * Math.pow(1.059463, i) * t / 8192 * Math.PI * 2)
-          : 0)
-    , 127));
-  
-  */
-  
-
   music = "";
   duration = 0;
   binaries = [];
@@ -171,7 +157,7 @@ play = () => {
 }
 
 share = () => {
-  alert(playBack())
+  prompt("", `bpm=200;notes=` + duration + `;new Audio('data:audio/wav;base64,'+btoa((t=>{for(t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<(8192*60/bpm)*notes;)S+=String.fromCharCode(eval(` + playBack() + `));return S})())).play()`)
 }
 
 var grab = false,
