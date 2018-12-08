@@ -1,36 +1,6 @@
-﻿<script>
-play = (frequency, time) => {
-  var sampleRate = 44100;
-  var volume = 1e4;
-  var attack = .002;
-  var base = (i,s,f,x) => {return Math.sin((2 * Math.PI)*(i/s)*f+x)};
-  var wave = (i,sampleRate,frequency,volume) => {return Math.sin(2*Math.PI*((i/sampleRate)*frequency)+Math.pow(base(i,sampleRate,frequency,0),2)+(.75*base(i,sampleRate,frequency,.25))+(.1*base(i,sampleRate,frequency,.5)))};
-  var dampen = Math.pow(.5*Math.log((frequency*volume)/sampleRate),2);
-  var val;
-  var data=[];
-  for (var i=0; i<sampleRate*time; i++){
-    if(i < 88){
-      val = volume*(i/(sampleRate*attack))*wave(i,sampleRate,frequency,volume);
-    }
-    else {
-      val = volume*Math.pow((1-((i-(sampleRate*attack))/(sampleRate*(time-attack)))),dampen)*wave(i,sampleRate,frequency,volume);
-    }
-    data[i] = val/1e5;
-  }
-  var t=(i,n)=>(n-i)/n;
-  var A=new AudioContext({sampleRate:44100});
-  var m=A.createBuffer(1,data.length,44100);
-  var b=m.getChannelData(0).set(data);
-  var s=A.createBufferSource();
-  s.buffer=m;
-  s.connect(A.destination);
-  s.start();
-}
+﻿<h1>MiniPiano</h1>Note length: <input id=d value=2 size=1> s<p><div id=p>
+<script>
+play=((e,t)=>{for(var a,n=(e,t,a,n)=>Math.sin(2*Math.PI*(e/t)*a+n),h=(e,t,a,h)=>Math.sin(2*Math.PI*(e/t*a)+Math.pow(n(e,t,a,0),2)+.75*n(e,t,a,.25)+.1*n(e,t,a,.5)),o=Math.pow(.5*Math.log(1e4*e/44100),2),r=[],M=0;M<44100*t;M++)a=M<88?M/88.2*1e4*h(M,44100,e):1e4*Math.pow(1-(M-88.2)/(44100*(t-.002)),o)*h(M,44100,e),r[M]=a/1e5;var f=new AudioContext({sampleRate:44100}),s=f.createBuffer(1,r.length,44100),c=(s.getChannelData(0).set(r),f.createBufferSource());c.buffer=s,c.connect(f.destination),c.start()})
+for(i=0;i<36;i++)f=130.81*1.06**i,[1,3,6,8,10].includes(i%12)?p.innerHTML+="<div class=s style=left:"+(i/2*35-6)+"px onclick=play("+f+",d.value)>":p.innerHTML+="<div onclick=play("+f+",d.value)>"
 </script>
-
-<h1>MiniPiano</h1>
-<hr>
-<h2>Piano</h2>
-<input id=f value=220 size=1> Hz
-<input id=d value=2 size=1> s
-<button onclick="play(f.value, d.value)">play</button>
+<style>*{box-sizing:border-box}#p{width:630px;position:relative}#p div{width:30px;height:200px;float:left;border:1px solid;cursor:pointer}#p div.s{background:#000;position:absolute;height:100px
