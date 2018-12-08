@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>miniPiano</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+html {
+  font-family: sans-serif;
+  font-size: 10pt;
+  line-height: 1;
+  color: white;
+  background: black;
+  user-select: none;
+}
+body {
+  margin: 0;
+  padding-top: 57px;
+}
+nav {
+  margin: 0;
+  padding: 10px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+button {
+  float: left;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  height: 40px;
+  padding: .5em;
+  color: white;
+  font-size: 12pt;
+  border: none;
+  border-radius: 3px;
+  background: rgba(255,255,255,.15);
+  transition: background .2s ease-in-out;
+  cursor: pointer;
+}
+button + button {
+  margin-left: 10px;
+}
+button:focus,
+button:hover {
+  background: rgba(255,255,255,.3);
+}
+#playB:focus,
+#playB:hover {
+  background: rgba(000,200,255,.7);
+}
+#resetB:focus,
+#resetB:hover {
+  background: rgba(255,200,0,.7);
+}
+#shareB:focus,
+#shareB:hover {
+  background: rgba(255,100,200,.7);
+}
+#exportB:focus,
+#exportB:hover {
+  background: rgba(200,255,0,.7);
+}
+table {
+  border: none;
+  border-collapse: collapse;
+  width: 100vw;
+}
+td {
+  min-width: 20px;
+  width: calc(100vw / 25);
+  height: calc((100vh - 57px) / 25);
+  background-color: rgba(255,255,255,.1);
+  border: 3px solid black;
+  border-radius: 5px;
+  transition: background-color .2s ease-in-out;
+  cursor: crosshair;
+}
+tr td:nth-of-type(4n+1) {
+  background: rgba(255,255,255,.125);
+}
+tr:nth-of-type(12n+3) td,
+tr:nth-of-type(12n+5) td,
+tr:nth-of-type(12n+7) td,
+tr:nth-of-type(12n+10) td,
+tr:nth-of-type(12n+12) td {
+  background-color: rgba(255,255,255,.05);
+}
+tr:nth-of-type(12n+3) td:nth-of-type(4n+1),
+tr:nth-of-type(12n+5) td:nth-of-type(4n+1),
+tr:nth-of-type(12n+7) td:nth-of-type(4n+1),
+tr:nth-of-type(12n+10) td:nth-of-type(4n+1),
+tr:nth-of-type(12n+12) td:nth-of-type(4n+1) {
+  background-color: rgba(255,255,255,.075);
+}
+tr td:hover {
+  background-color: rgba(100,255,200,.7);
+}
+tr td.active {
+  background-color: rgba(255,255,255,.7) !important;
+}
+[disabled] {
+  opacity: .2;
+}
+@media (max-width: 400px) {
+  body {
+    padding-top: 107px;
+  }
+  td {
+    height: calc((100vh - 107px) / 25);
+  }
+  button {
+    width: calc(50% - 5px);
+  }
+  button + button {
+    margin-left: 0;
+  }
+  button:nth-of-type(even) {
+    margin-left: 10px;
+  }  
+  button:nth-of-type(n+3) {
+    margin-top: 10px;
+  }  
+}
+@media (max-width: 250px) {
+  body {
+    padding-top: 137px;
+  }
+  td {
+    height: calc((100vh - 137px) / 25);
+  }
+  button {
+    height: 55px;
+  }
+  button span {
+    display: block;
+  }
+}
+</style>
+
+<nav>
+  <button id=playB accesskey=p><span>▶</span> Play</button>
+  <button id=resetB accesskey=r><span>↻</span> Reset</button>
+  <button id=shareB accesskey=s><span>⎋</span> Share</button>
+  <button id=exportB accesskey=e><span>↓</span> Export</button>
+</nav>
+<table id=t cellspacing=0 cellpadding=0></table>
+<script>
+// miniPiano
+d = [];
+
+draw = () => {
+  var h = "";
+  for(x = 64; x >= 40; x--){
+    h+="<tr>";
+    d[x] = [];
+    for(y = 0; y < 40; y++){
+      d[x][y] = 0;
+      h+="<td data-x="+x+" data-y="+y+">";
+    }
+  }
+  t.innerHTML = h;
+}
+draw()
+
+read = () => {
+  music = "";
+  for(y = 0; y < 40; y ++){
+    notes = 0;
+    for(x = 40; x <= 64; x++){
+      if(d[x][y]) notes++;
+    }
+    if(notes){
+      music += "(t>" + y*1024 + "&&t<"+(y + 1)*1024+")?127+~~(";
+      for(x = 40; x <= 64; x++){
+        if(d[x][y]) music += "+(127*Math.sin(" + (Math.pow(2,((x-49)/12))*440) + "*t/8192*Math.PI*2))";
+      }
+      music += ")/"+notes+":\n";
+    }
+  }
+  music += "127";
+  console.log(music);
+  return music
+}
+
+play = () => {
+  playB.disabled = true
+
+  s=function(f){for(var t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<40000;)S+=String.fromCharCode(eval(f));return S};
+  new Audio('data:audio/wav;base64,'+btoa(s(read()))).play();
+
+  setTimeout(function(){playB.disabled = false},2000)
+}
+
+reset = () => {
+  if (confirm('Are you sure you want to reset?')) draw()
+}
+
+share = () => {
+  prompt("",read());
+}
+
+render = () => {
+  s=function(f){for(var t=0,S='RIFF_oO_WAVEfmt '+atob('EAAAAAEAAQBAHwAAQB8AAAEACAA')+'data';++t<40000;)S+=String.fromCharCode(eval(f));return S};
+  var download = document.createElement('a')
+  download.setAttribute('download','miniPiano.wav')
+  download.href = 'data:audio/wav;base64,'+btoa(s(read()))
+  download.dispatchEvent(new MouseEvent('click'))
+}
+
+// Mouse & Touch Events
+var grab = false,
+    flip = false
+document.addEventListener('mousedown',flipStart)
+document.addEventListener('touchstart',flipStart)
+function flipStart(e){
+  e.preventDefault()
+  var td = e.target || e.touches[0].target
+  if (td.tagName === 'TD') {
+    grab = true
+    var targetX = td.getAttribute('data-x'),
+        targetY = td.getAttribute('data-y')
+    if (d[targetX][targetY]){
+      flip = true
+      d[targetX][targetY] = false
+      td.className = ''
+    } else {
+      d[targetX][targetY] = true
+      td.className = 'active'
+    }
+  }
+}
+document.addEventListener('mousemove',flipDrag)
+document.addEventListener('touchmove',flipDrag)
+function flipDrag(e){
+  var td = e.target || e.touches[0].target
+  if (td.tagName === 'TD') {
+    var targetX = td.getAttribute('data-x'),
+        targetY = td.getAttribute('data-y')
+    if (grab && (flip == false)){
+      d[targetX][targetY] = true
+      td.className = 'active'
+    } else if (grab && flip) {
+      d[targetX][targetY] = false
+      td.className = ''
+    }
+  }
+}
+document.addEventListener('mouseup',flipEnd)
+document.addEventListener('touchend',flipEnd)
+function flipEnd(e){
+  grab = flip = false
+}
+
+// Button Events
+document.getElementById('playB').addEventListener('click',play)
+document.getElementById('playB').addEventListener('touchstart',play)
+document.getElementById('resetB').addEventListener('click',reset)
+document.getElementById('resetB').addEventListener('touchstart',reset)
+document.getElementById('shareB').addEventListener('click',share)
+document.getElementById('shareB').addEventListener('touchstart',share)
+document.getElementById('exportB').addEventListener('click',render)
+document.getElementById('exportB').addEventListener('touchstart',render)
+
+// miniPiano icon
+var i = document.createElement('canvas'),
+    c = i.getContext('2d'),
+    f = document.createElement('link'),
+    m = document.createElement('link')
+//Set Icon Resolution
+i.width = i.height = 200
+//Rounded-corner background
+c.fillStyle='#333'
+c.beginPath()
+c.moveTo(10,0)
+c.lineTo(190,0)
+c.quadraticCurveTo(200,0,200,10)
+c.lineTo(200,190)
+c.quadraticCurveTo(200,200,190,200)
+c.lineTo(10,200)
+c.quadraticCurveTo(0,200,0,190)
+c.lineTo(0,10)
+c.quadraticCurveTo(0,0,10,0)
+c.closePath()
+c.fill()
+// White keys
+c.lineWidth='40'
+c.strokeStyle='rgba(255,255,255,.5)'
+c.beginPath()
+c.moveTo(50,30)
+c.lineTo(50,170)
+c.closePath()
+c.stroke()
+c.beginPath()
+c.moveTo(100,30)
+c.lineTo(100,170)
+c.closePath()
+c.stroke()
+c.beginPath()
+c.moveTo(150,30)
+c.lineTo(150,170)
+c.closePath()
+c.stroke()
+// Black keys
+c.lineWidth='30'
+c.strokeStyle='#333'
+c.beginPath()
+c.moveTo(75,90)
+c.lineTo(75,170)
+c.closePath()
+c.stroke()
+c.beginPath()
+c.moveTo(125,90)
+c.lineTo(125,170)
+c.closePath()
+c.stroke()
+//Export canvas image and attach to head
+f.type = 'image/x-icon'
+f.rel = 'shortcut icon'
+m.rel = 'apple-touch-icon'
+f.href = m.href = i.toDataURL('image/png')
+document.head.appendChild(f)
+document.head.appendChild(m)
+</script>
