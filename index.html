@@ -1,14 +1,14 @@
 ﻿<h1>MiniPiano</h1>Note length: <input id=d value=2 size=1> s<p><div id=p>
 <script>
-/*play = (frequency, time) => {
-  var b = (i,s,f,x) => Math.sin((2 * Math.PI)*(i/s)*f+x);
-  var w = (i,frequency) => Math.sin(2*Math.PI*((i/44100)*frequency)+Math.pow(b(i,44100,frequency,0),2)+(.75*b(i,44100,frequency,.25))+(.1*b(i,44100,frequency,.5)));
+play = (frequency, time) => {
+  var b = (i,s,f,x) => Math.sin((6.28)*(i/s)*f+x);
+  var w = (i,frequency) => Math.sin(6.28*((i/44100)*frequency)+b(i,44100,frequency,0)**2+(.75*b(i,44100,frequency,.25))+(.1*b(i,44100,frequency,.5)));
   var D = (.5*Math.log((frequency*1e4)/44100))**2;
   var d = [];
   for (i = 0; i < 44100 * time; i++){
     d[i] = i < 88
          ? (i / (44100 * .002)) * w(i,frequency)
-         : d[i] = Math.pow((1-((i-(44100*.002))/(44100*(time-.002)))),D)*w(i,frequency);
+         : d[i] = (1-((i-(44100*.002))/(44100*(time-.002))))**D * w(i,frequency);
   }
   A=new AudioContext();
   m=A.createBuffer(1,1e6,44100);
@@ -18,8 +18,8 @@
   s.connect(A.destination);
   s.start();
 }
-*/
-play=((t,e)=>{var a=(t,e,a,i)=>Math.sin(2*Math.PI*(t/e)*a+i),n=(t,e)=>Math.sin(2*Math.PI*(t/44100*e)+Math.pow(a(t,44100,e,0),2)+.75*a(t,44100,e,.25)+.1*a(t,44100,e,.5)),o=(.5*Math.log(1e4*t/44100))**2,r=[];for(i=0;i<44100*e;i++)r[i]=i<88?i/88.2*n(i,t):r[i]=Math.pow(1-(i-88.2)/(44100*(e-.002)),o)*n(i,t);A=new AudioContext,m=A.createBuffer(1,1e6,44100),m.getChannelData(0).set(r),s=A.createBufferSource(),s.buffer=m,s.connect(A.destination),s.start()})
+
+play=((e,t)=>{var a=(e,i,t,a)=>Math.sin(e/i*6.28*t+a),n=(e,i)=>Math.sin(e/44100*i*6.28+a(e,44100,i,0)**2+.75*a(e,44100,i,.25)+.1*a(e,44100,i,.5)),r=(.5*Math.log(1e4*e/44100))**2,f=[];for(i=0;i<44100*t;i++)f[i]=i<88?i/88.2*n(i,e):f[i]=(1-(i-88.2)/(44100*(t-.002)))**r*n(i,e);A=new AudioContext,m=A.createBuffer(1,1e6,44100),m.getChannelData(0).set(f),s=A.createBufferSource(),s.buffer=m,s.connect(A.destination),s.start()})
 for(i=0;i<36;i++)f=130.81*1.06**i,[1,3,6,8,10].includes(i%12)?p.innerHTML+="<div class=s style=left:"+(i/2*35-6)+"px onclick=play("+f+",d.value)>":p.innerHTML+="<div onclick=play("+f+",d.value)>"
 </script>
 <style>*{box-sizing:border-box}#p{width:630px;position:relative}#p div{width:30px;height:200px;float:left;border:1px solid;cursor:pointer}#p div.s{background:#000;position:absolute;height:100px
